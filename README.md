@@ -10,6 +10,25 @@ uniquement après **preuve** que le trafic sort par Tor.
 chrome de navigation, `--proxy-server` prouvé dans la cmdline WebView2,
 extinction sans orphelin. Linux/macOS : compilés, non exécutés ici (limites).
 
+## Plateformes — ce que vous obtenez réellement
+
+| Plateforme | État | Détail |
+|---|---|---|
+| **Windows 10/11 x64** | ✅ **Testé de bout en bout ici** | zip publié dans Releases ; `--smoke`, fenêtre, proxy prouvé, extinction propre |
+| **Linux (desktop)** | ⚠️ Compilé, **non exécuté** ici | WebKitGTK + garde GIO ; cross-build CI passe, personne n'a cliqué dessus |
+| **macOS 14+ (Apple silicon/intel)** | ⚠️ Compilé, **non exécuté** ici | WKWebView `proxyConfigurations` ; nécessite une machine Apple pour vérifier |
+| **iOS** | ❌ Non couvert | WebKit seul moteur autorisé ; une app mobile = projet Xcode + Apple SDK (voir ci-dessous) |
+| **Android** | ❌ Non couvert (pour l'instant) | `WebView.setProxyController`/ProxyController requiert autre chaîne de build (voir ci-dessous) |
+
+**Pourquoi pas d'app mobile dans ce dépôt** : TorView est un binaire desktop
+driven par un *vrai* daemon Tor. iOS exige un projet Xcode compilé avec les
+SDK Apple (impossible depuis une machine Windows, signature obligatoire) ;
+Android exige l'API ProxyController de WebView + embarquement du daemon Tor
+(JNI/gomobile) — du travail réel, planifié, non livré. En attendant :
+**OnionBrowser (iOS)** et **Orbot+TorBrowser (Android)** sont les clients
+mobiles de référence (et, hélas, montrent pourquoi cette niche est difficile :
+fuites WebRTC/DNS documentées dans leurs dépôts).
+
 ## Tour des dépôts — pourquoi cette architecture
 
 | Projet | Forces | Faiblesses mesurables |
