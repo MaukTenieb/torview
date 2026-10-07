@@ -27,7 +27,7 @@ cp README.md LICENSE SECURITY.md dist/pkg/
 rm -f dist/torview-windows-x64.zip
 
 echo "[*] Zip"
-cd dist/pkg && zip -q -r ../torview-windows-x64.zip . && cd ../..
+cd dist/pkg && powershell -NoProfile -Command "Compress-Archive -Path * -DestinationPath ..\\torview-windows-x64.zip -Force" && cd ../..
 sha256sum dist/torview-windows-x64.zip | tee dist/torview-windows-x64.zip.sha256
 rm -rf dist/pkg
 echo "[+] Ready: dist/torview-windows-x64.zip"
