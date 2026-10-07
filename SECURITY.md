@@ -15,6 +15,11 @@
 4. **Le daemon Tor** : authentification SAFECOOKIE (anti-MitM), ports aléatoires
    locaux, `TAKEOWNERSHIP` — pas de Tor zombie, pas de collision avec un
    service existant.
+5. **Inter-sessions (Windows)** : le profil WebView2 est **purgé à chaque
+   lancement** (cookies, stockage) — les sessions ne se lient pas entre
+   elles ; `TORVIEW_PERSIST=1` pour conserver l'état. Sous Linux/macOS,
+   l'éphémère du profil moteur n'est pas encore garanti (chemins non
+   testés) : considérez l'état comme persistant là-bas.
 
 ## Ce que TorView ne protège PAS (à lire avant de faire confiance)
 

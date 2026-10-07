@@ -166,9 +166,15 @@ func boot() {
 		fmt.Fprintf(os.Stderr, "[-] %v\n", err)
 		os.Exit(1)
 	}
+	defer m.Close() // orderly QUIT on the normal return path (window closed)
 
 	// Every step below closes Tor on failure: fail-closed on ALL paths
-	// (defer does not run on os.Exit).
+	// (defer does not run on os.Exit — the error paths call m.Close()
+	// explicitly before exiting). The success path relies on this defer:
+	// bootRest returns when the user closes the window, and this defer sends
+	// an explicit QUIT. Belt and braces: Tor would also exit by itself via
+	// TAKEOWNERSHIP when our control connection drops, but we do not leave
+	// that to chance.
 	if err := bootRest(m); err != nil {
 		m.Close()
 		fmt.Fprintf(os.Stderr, "[-] %v\n", err)
@@ -200,19 +206,23 @@ func bootRest(m *torManager) error {
 
 	// 4. From here on, our own Go code may only touch loopback.
 	armDefaultPolicyGuard()
-	interrupts()
+	interrupts(m)
 
 	// 5. Window (closed by the user = we return; m.Close runs in boot()).
 	runWebview(m, detail)
 	return nil
 }
 
-// interrupts ensures a clean Tor shutdown on Ctrl-C / SIGTERM.
-func interrupts() {
+// interrupts ensures a clean Tor shutdown on Ctrl-C / SIGTERM. os.Exit does
+// NOT run deferred functions, so the manager must be closed EXPLICITLY here
+// (audit fix: the previous comment claimed a deferred m.Close() existed —
+// it did not; Tor only exited via TAKEOWNERSHIP on connection drop).
+func interrupts(m *torManager) {
 	ch := make(chan os.Signal, 1)
 	signal.Notify(ch, os.Interrupt, syscall.SIGTERM)
 	go func() {
 		<-ch
-		os.Exit(0) // deferred m.Close() runs.
+		m.Close()
+		os.Exit(0)
 	}()
 }

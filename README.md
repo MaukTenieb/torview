@@ -3,10 +3,13 @@
 Navigateur Tor **minimaliste, indépendant et portable** en Go : moteur web
 **natif** de chaque OS + démon Tor piloté et — depuis `--fetch-tor` —
 **auto-téléchargé et vérifié** (Windows **et** Linux/macOS : les Expert
-Bundles officiels existent pour les trois OS et sont tous gérés). Zéro cgo,
-zéro module SOCKS tiers (client SOCKS5 ~120 lignes auditées), zéro serveur
-local : la fenêtre s'ouvre uniquement après **preuve** que le trafic sort
-par Tor — preuve renforcée en 0.6.0 d'un aller-retour **.onion réel**
+Bundles officiels existent pour les trois OS et sont tous gérés). Zéro cgo
+(sauf le chemin macOS, natif ObjC), zéro module SOCKS tiers (client SOCKS5
+auditfile de 168 lignes, une seule dépendance : la lib webview), zéro
+serveur local, **profil éphémère par défaut** (cookies/état purgés à chaque
+lancement — `TORVIEW_PERSIST=1` pour les conserver) : la fenêtre s'ouvre
+uniquement après **preuve** que le trafic sort par Tor — preuve renforcée
+en 0.6.0 d'un aller-retour **.onion réel**
 (service découvert dynamiquement depuis l'en-tête officiel
 `Onion-Location` de torproject.org, rien de codé en dur).
 
@@ -112,7 +115,11 @@ Tor résolu dans l'ordre : `TORVIEW_TOR` → `bin/tor/tor(.exe)` (layout
    `--proxy-bypass-list=<-loopback>`.
 4. Indépendance : `--fetch-tor` (digest comparé aux `sha256sums-signed-build.txt`
    officiels) puis smoke **sans** `TORVIEW_TOR` → exit 0.
-5. Extinction : fermeture → aucun processus résiduel (`tasklist`).
+5. Extinction : fermeture → aucun processus résiduel (`tasklist`) —
+   fermeture explicite (QUIT) sur tous les chemins, TAKEOWNERSHIP en
+   dernier recours.
+6. Profil : au lancement suivant, `wv2_profile/` est purgé (cookies et
+   état du moteur ne survivent pas à la session) sauf `TORVIEW_PERSIST=1`.
 
 ## Limites honnêtes
 

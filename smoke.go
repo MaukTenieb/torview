@@ -25,7 +25,8 @@ func runSmoke() {
 		fmt.Fprintf(os.Stderr, "[-] %v\n", err)
 		os.Exit(1)
 	}
-	defer m.Close()
+	defer m.Close() // orderly QUIT on the normal return path
+	interrupts(m)   // Ctrl-C: os.Exit would skip the defer above, so close explicitly
 	logLine("[torboot smoke] socks=" + m.SocksAddr() + " control=" + m.ControlAddr())
 
 	ok, detail := checkExit(m)

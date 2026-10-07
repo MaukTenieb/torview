@@ -46,10 +46,21 @@ func configureProxyEnv(m *torManager) error {
 		return err
 	}
 
-	// Private profile directory (isolation from other WebView2 apps).
+	// Private profile directory (isolation from other WebView2 apps) — and
+	// EPHEMERAL by default: cookies/storage surviving between sessions would
+	// link them, the exact property Tor Browser's private mode removes. The
+	// wipe runs BEFORE any webview handle exists; TORVIEW_PERSIST=1 keeps
+	// the profile across sessions.
 	exe, err := os.Executable()
 	if err == nil {
 		profile := filepath.Join(filepath.Dir(exe), "wv2_profile")
+		if os.Getenv("TORVIEW_PERSIST") == "1" {
+			logLine("[proxy] profil WebView2 conservé (TORVIEW_PERSIST=1)")
+		} else {
+			if rerr := os.RemoveAll(profile); rerr != nil {
+				logLine("[proxy] [!] purge du profil WebView2 : " + rerr.Error())
+			}
+		}
 		_ = os.MkdirAll(profile, 0o700)
 		_ = os.Setenv("WEBVIEW2_USER_DATA_FOLDER", profile)
 	}
