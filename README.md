@@ -17,6 +17,13 @@ en 0.6.0 d'un aller-retour **.onion réel**
 chrome de navigation, `--proxy-server` prouvé dans la cmdline WebView2,
 extinction sans orphelin. Linux/macOS : compilés, non exécutés ici (limites).
 
+## ⬇ Téléchargement (1 clic)
+
+**Windows x64 (testé)** : [torview-windows-x64.zip — dernière Release](https://github.com/MaukTenieb/torview/releases/latest/download/torview-windows-x64.zip)
+— vérifiable avec le [.sha256](https://github.com/MaukTenieb/torview/releases/latest/download/torview-windows-x64.zip.sha256)
+joint à la même Release (`certutil -hashfile <zip> SHA256`).
+Page d'accueil : https://MaukTenieb.github.io/torview/ (activez Pages → branch `main`, dossier `/docs`).
+
 ## Plateformes — ce que vous obtenez réellement
 
 | Plateforme | État | Détail |

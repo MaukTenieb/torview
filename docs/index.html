@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TorView — navigateur Tor minimaliste</title>
+<meta name="description" content="Téléchargement de TorView : un navigateur web minimaliste routé par un démon Tor officiel. Preuve de sortie exigée avant d'ouvrir la fenêtre.">
+<style>
+  :root { color-scheme: dark; }
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, "Segoe UI", system-ui, sans-serif;
+    background: #101418; color: #d8dee6; margin: 0;
+  }
+  .wrap { max-width: 860px; margin: 0 auto; padding: 48px 20px 64px; }
+  h1 { font-size: 34px; font-weight: 650; margin: 0 0 6px; letter-spacing: .3px; }
+  .sub { opacity: .8; font-size: 16px; margin: 0 0 28px; }
+  .dl {
+    display: inline-block; background: #1f6feb; color: #fff; text-decoration: none;
+    padding: 16px 34px; border-radius: 12px; font-size: 19px; font-weight: 650;
+  }
+  .dl:hover { background: #388bfd; }
+  .alt { display: block; margin-top: 10px; font-size: 13.5px; opacity: .75; }
+  .alt a { color: #79b8ff; }
+  h2 { font-size: 19px; margin: 40px 0 10px; color: #fff; }
+  ul, p { font-size: 15px; line-height: 1.6; }
+  table { border-collapse: collapse; width: 100%; font-size: 14.5px; }
+  td, th { border: 1px solid #2a3138; padding: 8px 12px; text-align: left; vertical-align: top; }
+  th { background: #171c21; color: #fff; }
+  .ok { color: #57d364; font-weight: 600; white-space: nowrap; }
+  .warn { color: #e2b340; font-weight: 600; white-space: nowrap; }
+  .no { color: #ff6b6b; font-weight: 600; white-space: nowrap; }
+  code {
+    background: #171c21; border: 1px solid #2a3138; border-radius: 6px;
+    padding: 2px 8px; font-size: 13.5px; word-break: break-all;
+  }
+  .warn-box {
+    background: #1a1410; border: 1px solid #5c4420; border-radius: 10px;
+    padding: 14px 18px; font-size: 14.5px; line-height: 1.6; margin-top: 36px;
+  }
+  footer { margin-top: 44px; font-size: 13px; opacity: .6; }
+  footer a { color: #79b8ff; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>TorView</h1>
+  <p class="sub">Navigateur web minimaliste piloté par un démon <strong>Tor officiel</strong> —
+  la fenêtre ne s'ouvre qu'après <strong>preuve</strong> que le trafic sort par un relais de sortie.</p>
+
+  <a class="dl" href="https://github.com/MaukTenieb/torview/releases/latest/download/torview-windows-x64.zip">⬇ Télécharger TorView (Windows x64)</a>
+  <span class="alt">
+    Autres plateformes, sources et empreintes :
+    <a href="https://github.com/MaukTenieb/torview/releases">la page Releases</a> ·
+    <a href="https://github.com/MaukTenieb/torview">code source</a>
+  </span>
+
+  <h2>Ce que fait TorView</h2>
+  <ul>
+    <li>Démon <strong>Tor officiel embarqué</strong>, téléchargé chez torproject.org, SHA-256 vérifié contre les sommes signées ; ports aléatoires, authentification SAFECOOKIE, extinction propre (zéro processus orphelin).</li>
+    <li><strong>DNS résolu côté Tor</strong> (SOCKSv5 remote-DNS) ; WebRTC désactivé à la couche Chromium et masqué par script ; <strong>profil éphémère par défaut</strong> — les cookies ne lient pas les sessions.</li>
+    <li><strong>Preuve avant la fenêtre</strong> : relais de sortie confirmé (check.torproject.org via Tor), identity NEWNYM, aller-retour .onion réel — le tout dans le journal, reproductible via <code>torview.exe --smoke</code>.</li>
+    <li>Zéro dépendance exotique : client SOCKS5 audité de 168 lignes, un seul binaire.</li>
+  </ul>
+
+  <h2>Plateformes — l'état réel</h2>
+  <table>
+    <tr><th>Plateforme</th><th>État</th><th>Détail</th></tr>
+    <tr><td>Windows 10/11 x64</td><td class="ok">✅ Testé de bout en bout</td><td>Le zip ci-dessus ; smoke, fenêtre, proxy prouvé, extinction propre</td></tr>
+    <tr><td>Linux (desktop)</td><td class="warn">⚠️ Compilé, non exécuté par le mainteneur</td><td>WebKitGTK ; <code>--fetch-tor</code> gère les bundles officiels</td></tr>
+    <tr><td>macOS 14+</td><td class="warn">⚠️ Compilé, non exécuté</td><td>WKWebView <code>proxyConfigurations</code> (cgo)</td></tr>
+    <tr><td>iOS</td><td class="no">❌ Non couvert</td><td>WebKit obligatoire + projet Xcode Apple — voir README</td></tr>
+    <tr><td>Android</td><td class="no">❌ Non couvert (pour l'instant)</td><td>ProxyController + daemon embarqué : travail à faire</td></tr>
+  </table>
+
+  <h2>Vérifier le zip téléchargé (Windows)</h2>
+  <p>Chaque Release joint son empreinte (<code>torview-windows-x64.zip.sha256</code>) ; comparez :</p>
+  <p><code>certutil -hashfile TorView-0.6.0-windows-x64.zip SHA256</code></p>
+
+  <div class="warn-box">
+    ⚠️ <strong>Lucidité assumée</strong> : TorView n'est <strong>pas Tor Browser</strong> — pas
+    d'anti-fingerprinting (canvas, polices, horloge = ceux du moteur). Routé par Tor ≠ durci contre
+    l'identification. Utilisez-le en <em>complément</em>, lisez le
+    <a href="https://github.com/MaukTenieb/torview/blob/main/README.md">README</a> et
+    <a href="https://github.com/MaukTenieb/torview/blob/main/SECURITY.md">SECURITY.md</a> avant de faire confiance.
+  </div>
+
+  <footer> Licence MIT · TorView 0.6.0 · la CI refabrique et vérifie ce zip à chaque tag <code>v*</code> </footer>
+</div>
+</body>
+</html>
