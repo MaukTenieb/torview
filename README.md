@@ -142,9 +142,9 @@ Tor résolu dans l'ordre : `TORVIEW_TOR` → `bin/tor/tor(.exe)` (layout
 - **CI** : `.github/workflows/ci.yml` — vet+tests sur les 3 OS de runners,
   cross-builds headless des autres OS, et un job de release qui refabrique
   le zip Windows (bundle Tor re-téléchargé et revérifié sur le runner) et
-  l'attache au tag.-badge : remplacer `UTILISATEUR` ci-dessous.
+  l'attache au tag.
 
-![CI](https://github.com/UTILISATEUR/torview/actions/workflows/ci.yml/badge.svg)
+![CI](https://github.com/MaukTenieb/torview/actions/workflows/ci.yml/badge.svg)
 
 ## Carte des fichiers
 
