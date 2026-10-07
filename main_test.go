@@ -130,6 +130,37 @@ func TestNewerVersion(t *testing.T) {
 	}
 }
 
+// ---- Expert Bundle triples (fetchtor.go) --------------------------------------
+// The expected values were verified against the real torbrowser index
+// (dist.torproject.org/torbrowser/15.0.24/), which publishes exactly:
+// windows-x86_64, windows-i686, linux-x86_64, linux-i686, macos-x86_64,
+// macos-aarch64, and four android-* bundles (out of scope).
+func TestBundleTriples(t *testing.T) {
+	cases := []struct {
+		goos, goarch, want string
+	}{
+		{"windows", "amd64", "windows-x86_64"},
+		{"windows", "386", "windows-i686"},
+		{"linux", "amd64", "linux-x86_64"},
+		{"linux", "386", "linux-i686"},
+		{"darwin", "amd64", "macos-x86_64"},
+		{"darwin", "arm64", "macos-aarch64"},
+	}
+	for _, c := range cases {
+		got, err := bundleTriple(c.goos, c.goarch)
+		if err != nil || got != c.want {
+			t.Errorf("bundleTriple(%s/%s) = (%q, %v), attendu %q", c.goos, c.goarch, got, err, c.want)
+		}
+	}
+	// Only triples actually published upstream are accepted: no invented
+	// entries, and the android bundles stay out of scope on purpose.
+	for _, bad := range [][2]string{{"linux", "arm64"}, {"android", "arm64"}, {"plan9", "amd64"}} {
+		if got, err := bundleTriple(bad[0], bad[1]); err == nil {
+			t.Errorf("bundleTriple(%s/%s) = %q : aurait dû être refusé", bad[0], bad[1], got)
+		}
+	}
+}
+
 // ---- SAFECOOKIE constants (control-spec §3.24 exact labels) -------------------
 
 func TestSafeCookieLabelsExact(t *testing.T) {

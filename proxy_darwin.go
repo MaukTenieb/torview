@@ -1,8 +1,13 @@
-//go:build darwin
+//go:build darwin && cgo
 
 // Package main — torview: minimal Tor webview browser.
 //
 // proxy_darwin.go: WKWebView proxy configuration (macOS 14+).
+//
+// REQUIRES cgo (Objective-C runtime access): build on a Mac (or any host
+// with an Apple cross-SDK). With CGO_ENABLED=0 the proxy_darwin_nocgo.go
+// stub takes over and refuses to boot with a clear message instead of
+// silently routing DIRECT.
 //
 // The documented API is WKWebsiteDataStore.proxyConfigurations with
 // ProxyConfiguration.init(connectToSOCKSv5Proxy:) — macOS 14.0+ / iOS 17.0+

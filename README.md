@@ -2,9 +2,13 @@
 
 Navigateur Tor **minimaliste, indépendant et portable** en Go : moteur web
 **natif** de chaque OS + démon Tor piloté et — depuis `--fetch-tor` —
-**auto-téléchargé et vérifié**. Zéro cgo, zéro module SOCKS tiers (client
-SOCKS5 ~120 lignes auditées), zéro serveur local : la fenêtre s'ouvre
-uniquement après **preuve** que le trafic sort par Tor.
+**auto-téléchargé et vérifié** (Windows **et** Linux/macOS : les Expert
+Bundles officiels existent pour les trois OS et sont tous gérés). Zéro cgo,
+zéro module SOCKS tiers (client SOCKS5 ~120 lignes auditées), zéro serveur
+local : la fenêtre s'ouvre uniquement après **preuve** que le trafic sort
+par Tor — preuve renforcée en 0.6.0 d'un aller-retour **.onion réel**
+(service découvert dynamiquement depuis l'en-tête officiel
+`Onion-Location` de torproject.org, rien de codé en dur).
 
 État vérifié (Windows 11, Tor 15.0.24 officiel) : smoke complet, fenêtre avec
 chrome de navigation, `--proxy-server` prouvé dans la cmdline WebView2,
@@ -15,8 +19,8 @@ extinction sans orphelin. Linux/macOS : compilés, non exécutés ici (limites).
 | Plateforme | État | Détail |
 |---|---|---|
 | **Windows 10/11 x64** | ✅ **Testé de bout en bout ici** | zip publié dans Releases ; `--smoke`, fenêtre, proxy prouvé, extinction propre |
-| **Linux (desktop)** | ⚠️ Compilé, **non exécuté** ici | WebKitGTK + garde GIO ; cross-build CI passe, personne n'a cliqué dessus |
-| **macOS 14+ (Apple silicon/intel)** | ⚠️ Compilé, **non exécuté** ici | WKWebView `proxyConfigurations` ; nécessite une machine Apple pour vérifier |
+| **Linux (desktop)** | ⚠️ Compilé (localement et en CI), **non exécuté** | WebKitGTK + garde GIO ; `--fetch-tor` gère le bundle officiel linux-x86_64/i686 |
+| **macOS 14+ (Apple silicon/intel)** | ⚠️ Compilé (localement et en CI), **non exécuté** | WKWebView `proxyConfigurations` ; `--fetch-tor` gère macos-aarch64/x86_64 |
 | **iOS** | ❌ Non couvert | WebKit seul moteur autorisé ; une app mobile = projet Xcode + Apple SDK (voir ci-dessous) |
 | **Android** | ❌ Non couvert (pour l'instant) | `WebView.setProxyController`/ProxyController requiert autre chaîne de build (voir ci-dessous) |
 
@@ -83,10 +87,14 @@ go build -o torview.exe -ldflags="-H windowsgui" .   # Windows (sans gcc)
 go build -o torview .                                # Linux/macOS
 go build -tags nowebview -o torview-smoke .          # sans fenêtre (CI)
 
-./torview.exe --fetch-tor     # 1 fois : Expert Bundle officiel → bin/tor/ (somme vérifiée)
-./torview.exe --smoke         # preuve : Tor + sortie + NEWNYM (code 0)
-./torview.exe                 # le navigateur
+./torview --fetch-tor         # 1 fois : Expert Bundle officiel de VOTRE OS → bin/tor/ (somme vérifiée)
+./torview --smoke             # preuve : Tor + sortie + NEWNYM + .onion réel (code 0)
+./torview                     # le navigateur
 ```
+
+La preuve .onion du smoke est informationnelle et non bloquante (un service
+onion en panne n'est pas une fuite) ; `TORVIEW_SKIP_ONION=1` la désactive
+pour les sessions hors ligne.
 
 Tor résolu dans l'ordre : `TORVIEW_TOR` → `bin/tor/tor(.exe)` (layout
 `--fetch-tor`) → `bin/tor(.exe)` → `$PATH`.
@@ -94,7 +102,8 @@ Tor résolu dans l'ordre : `TORVIEW_TOR` → `bin/tor/tor(.exe)` (layout
 ## Protocole de vérification (reproductible)
 
 1. `--smoke` → exit 0, journal : ports appris, « trafic bien sorti par un
-   relais de sortie Tor », « NEWNYM accepté ».
+   relais de sortie Tor », « NEWNYM accepté », et désormais « preuve .onion :
+   service onion … a répondu 200 via le circuit » (info, non bloquante).
 2. Fenêtre : séquence complète dans le journal (Tor → WebView2 → vérif →
    « garde de transport armé »).
 3. Preuve proxy : cmdline `msedgewebview2.exe` de torview contient
@@ -119,7 +128,16 @@ Tor résolu dans l'ordre : `TORVIEW_TOR` → `bin/tor/tor(.exe)` (layout
   n'est pas une isolation OS.
 - **`--fetch-tor`** : hors Tor par nature (bootstrap) ; somme vérifiée,
   signature GPG des sommes non vérifiée par le programme (référence
-  manuelle torproject.org).
+  manuelle torproject.org). Triple déduite de GOOS/GOARCH ; seules les
+  triples réellement publiées par torproject sont acceptées. Le chemin
+  windows est exécuté et vérifié ici ; linux/macos extraient le même code
+  (grade compilation), la CI reconstruit le zip Windows sur tag.
+- **CI** : `.github/workflows/ci.yml` — vet+tests sur les 3 OS de runners,
+  cross-builds headless des autres OS, et un job de release qui refabrique
+  le zip Windows (bundle Tor re-téléchargé et revérifié sur le runner) et
+  l'attache au tag.-badge : remplacer `UTILISATEUR` ci-dessous.
+
+![CI](https://github.com/UTILISATEUR/torview/actions/workflows/ci.yml/badge.svg)
 
 ## Carte des fichiers
 

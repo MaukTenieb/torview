@@ -17,7 +17,9 @@ GO=${GO:-go}
 echo "[*] Build torview.exe (windowsgui)"
 "$GO" vet .
 "$GO" test .
-"$GO" build -trimpath -ldflags="-s -w -H windowsgui" -o dist/pkg/torview.exe .
+COMMIT=$(git rev-parse --short HEAD 2>/dev/null || echo unset)
+echo "[*] Commit injecté : $COMMIT"
+"$GO" build -trimpath -ldflags="-s -w -H windowsgui -X main.buildCommit=$COMMIT" -o dist/pkg/torview.exe .
 
 echo "[*] Assemble package"
 rm -rf dist/pkg/bin dist/pkg/tor_data dist/pkg/wv2_profile

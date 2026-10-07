@@ -1,10 +1,16 @@
 // Package main — torview: minimal Tor webview browser.
 //
 // fetchtor.go: `--fetch-tor` makes the app INDEPENDENT from a preinstalled
-// Tor. It downloads the official Tor Expert Bundle (tor-expert-bundle-
-// windows-x86_64-<version>.tar.gz) from dist.torproject.org over HTTPS,
-// checks the archive digest against the official sha256sums-signed-build.txt
-// of the same release directory, and extracts the tor/ folder into ./bin/.
+// Tor. It downloads the official Tor Expert Bundle
+// (tor-expert-bundle-<triple>-<version>.tar.gz) from dist.torproject.org
+// over HTTPS, checks the archive digest against the official
+// sha256sums-signed-build.txt of the same release directory, and extracts
+// the tor/ folder into ./bin/.
+//
+// Supported triples (verified against the 15.0.x index layout):
+//   windows-x86_64, windows-i686, linux-x86_64, linux-i686,
+//   macos-x86_64, macos-aarch64. (android-* bundles exist but need the
+//   dedicated Android port; there is no linux-aarch64 bundle upstream.)
 //
 // Honest notes:
 //   - Fetching Tor necessarily happens OUTSIDE Tor (bootstrap problem, same
@@ -13,6 +19,8 @@
 //   - We verify the digest against the sha256sums file but we do NOT run GPG
 //     on its signature; compare the printed version against torproject.org
 //     for full assurance.
+//   - Only the windows path is executed in CI so far; linux/macos extraction
+//     is compile-grade (same code path, different triple).
 package main
 
 import (
@@ -33,21 +41,48 @@ import (
 )
 
 const (
-	distIndex  = "https://dist.torproject.org/torbrowser/"
-	sumsFile   = "sha256sums-signed-build.txt"
-	expertArch = "windows-x86_64" // TODO: map GOARCH for arm64 windows
+	distIndex = "https://dist.torproject.org/torbrowser/"
+	sumsFile  = "sha256sums-signed-build.txt"
 )
 
-var (
-	reVersionDir = regexp.MustCompile(`href="(\d+\.\d+\.\d+)/"`) // stable dirs only (15.0.24); alphas like 16.0a13 don't match
-	reExpertGz   = regexp.MustCompile(`href="(tor-expert-bundle-` + expertArch + `-(\d+\.\d+\.\d+)\.tar\.gz)"`)
-)
+var reVersionDir = regexp.MustCompile(`href="(\d+\.\d+\.\d+)/"`) // stable dirs only (15.0.24); alphas like 16.0a13 don't match
+
+// bundleTriple maps a GOOS/GOARCH pair to the Tor Expert Bundle triple,
+// exactly the set published by torproject (no invented entries).
+func bundleTriple(goos, goarch string) (string, error) {
+	switch goos {
+	case "windows":
+		switch goarch {
+		case "amd64":
+			return "windows-x86_64", nil
+		case "386":
+			return "windows-i686", nil
+		}
+	case "linux":
+		switch goarch {
+		case "amd64":
+			return "linux-x86_64", nil
+		case "386":
+			return "linux-i686", nil
+		}
+	case "darwin":
+		switch goarch {
+		case "arm64":
+			return "macos-aarch64", nil
+		case "amd64":
+			return "macos-x86_64", nil
+		}
+	}
+	return "", fmt.Errorf("pas de Tor Expert Bundle publié pour %s/%s", goos, goarch)
+}
 
 // fetchTor downloads and installs the Tor daemon into ./bin/tor/.
 func fetchTor() error {
-	if runtime.GOOS != "windows" {
-		return fmt.Errorf("--fetch-tor est implémenté pour Windows ; sous %s : installez le paquet tor de votre distribution, ou déposez le binaire dans ./bin/tor/tor", runtime.GOOS)
+	triple, err := bundleTriple(runtime.GOOS, runtime.GOARCH)
+	if err != nil {
+		return fmt.Errorf("--fetch-tor : %w", err)
 	}
+	reExpertGz := regexp.MustCompile(`href="(tor-expert-bundle-` + triple + `-(\d+\.\d+\.\d+)\.tar\.gz)"`)
 
 	// 1) Newest stable version directory from the official index.
 	idx, err := httpGet(distIndex)
@@ -73,7 +108,7 @@ func fetchTor() error {
 	}
 	asset := reExpertGz.FindStringSubmatch(dirIdx)
 	if asset == nil {
-		return fmt.Errorf("tor-expert-bundle-%s-*.tar.gz introuvable dans %s", expertArch, dirURL)
+		return fmt.Errorf("tor-expert-bundle-%s-*.tar.gz introuvable dans %s", triple, dirURL)
 	}
 	gzURL := dirURL + asset[1]
 

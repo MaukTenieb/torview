@@ -6,8 +6,11 @@ package main
 
 import (
 	"context"
+	"fmt"
+	"io"
 	"net"
 	"net/http"
+	"net/url"
 	"strings"
 	"time"
 )
@@ -83,4 +86,45 @@ func checkExit(m *torManager) (bool, string) {
 		return false, "le site n'a PAS vu une sortie Tor"
 	}
 	return false, "réponse inattendue du site de contrôle"
+}
+
+// onionProbe demonstrates a real hidden-service round trip through this
+// session's Tor. The target is DISCOVERED at runtime from torproject.org's
+// Onion-Location header (official, self-describing source — nothing
+// hard-coded that rots), then fetched over the same SOCKS5 remote-DNS path.
+// Informational only: a dead onion service must not fail the gate; the
+// exit-relay check above remains the authority.
+func onionProbe(m *torManager) (string, bool) {
+	c := torHTTPClient(m, 60*time.Second)
+	req, err := http.NewRequest("GET", "https://www.torproject.org/", nil)
+	if err != nil {
+		return "requête invalide : " + err.Error(), false
+	}
+	resp, err := c.Do(req)
+	if err != nil {
+		return "torproject.org injoignable via Tor : " + err.Error(), false
+	}
+	onion := resp.Header.Get("Onion-Location")
+	resp.Body.Close()
+	if onion == "" {
+		return "source officielle sans Onion-Location — étape .onion ignorée", false
+	}
+	req2, err := http.NewRequest("GET", onion, nil)
+	if err != nil {
+		return "URL onion invalide (" + onion + ") : " + err.Error(), false
+	}
+	resp2, err := c.Do(req2)
+	if err != nil {
+		return "service onion injoignable : " + err.Error(), false
+	}
+	defer resp2.Body.Close()
+	_, _ = io.Copy(io.Discard, io.LimitReader(resp2.Body, 4<<10))
+	host := onion
+	if u, uerr := url.Parse(onion); uerr == nil {
+		host = u.Host
+	}
+	if resp2.StatusCode == 200 {
+		return "service onion " + host + " a répondu 200 via le circuit (hidden service OK)", true
+	}
+	return fmt.Sprintf("service onion %s a répondu HTTP %d", host, resp2.StatusCode), false
 }
