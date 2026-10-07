@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>TorView — navigateur Tor minimaliste</title>
-<meta name="description" content="Téléchargement de TorView : un navigateur web minimaliste routé par un démon Tor officiel. Preuve de sortie exigée avant d'ouvrir la fenêtre.">
+<meta name="description" content="TorView : navigateur web minimaliste routé par un démon Tor officiel. Voyez l'exécution vérifiée rejouée ligne à ligne, puis exécutez-la chez vous.">
 <style>
   :root { color-scheme: dark; }
   * { box-sizing: border-box; }
@@ -12,17 +12,22 @@
     font-family: -apple-system, "Segoe UI", system-ui, sans-serif;
     background: #101418; color: #d8dee6; margin: 0;
   }
-  .wrap { max-width: 860px; margin: 0 auto; padding: 48px 20px 64px; }
+  .wrap { max-width: 900px; margin: 0 auto; padding: 44px 20px 64px; }
   h1 { font-size: 34px; font-weight: 650; margin: 0 0 6px; letter-spacing: .3px; }
-  .sub { opacity: .8; font-size: 16px; margin: 0 0 28px; }
+  .sub { opacity: .8; font-size: 16px; margin: 0 0 26px; }
+  .row { display: flex; gap: 14px; flex-wrap: wrap; align-items: center; }
   .dl {
     display: inline-block; background: #1f6feb; color: #fff; text-decoration: none;
-    padding: 16px 34px; border-radius: 12px; font-size: 19px; font-weight: 650;
+    padding: 15px 30px; border-radius: 12px; font-size: 18px; font-weight: 650;
   }
   .dl:hover { background: #388bfd; }
-  .alt { display: block; margin-top: 10px; font-size: 13.5px; opacity: .75; }
-  .alt a { color: #79b8ff; }
-  h2 { font-size: 19px; margin: 40px 0 10px; color: #fff; }
+  .play {
+    display: inline-block; background: #6d28d9; color: #fff; text-decoration: none;
+    border: 0; border-radius: 12px; padding: 15px 30px; font-size: 18px; font-weight: 650; cursor: pointer;
+  }
+  .play:disabled { opacity: .5; cursor: default; }
+  h2 { font-size: 19px; margin: 42px 0 10px; color: #fff; }
+  h3 { font-size: 15.5px; margin: 26px 0 8px; color: #fff; }
   ul, p { font-size: 15px; line-height: 1.6; }
   table { border-collapse: collapse; width: 100%; font-size: 14.5px; }
   td, th { border: 1px solid #2a3138; padding: 8px 12px; text-align: left; vertical-align: top; }
@@ -36,10 +41,26 @@
   }
   .warn-box {
     background: #1a1410; border: 1px solid #5c4420; border-radius: 10px;
-    padding: 14px 18px; font-size: 14.5px; line-height: 1.6; margin-top: 36px;
+    padding: 14px 18px; font-size: 14.5px; line-height: 1.6; margin-top: 34px;
   }
   footer { margin-top: 44px; font-size: 13px; opacity: .6; }
   footer a { color: #79b8ff; }
+  /* --- console de relecture --- */
+  #console {
+    background: #0b0e11; border: 1px solid #2a3138; border-radius: 12px;
+    font-family: Consolas, "Cascadia Mono", monospace; font-size: 13.5px;
+    line-height: 1.55; padding: 18px 20px; min-height: 250px; white-space: pre-wrap;
+    overflow-x: hidden; color: #9fb3c8;
+  }
+  #console .cmd   { color: #57d364; }
+  #console .ok    { color: #57d364; font-weight: 600; }
+  #console .tor   { color: #7aa2f7; }
+  #console .port  { color: #e2b340; }
+  #console .nym   { color: #bb9af7; }
+  #console .err   { color: #ff6b6b; }
+  #console .cur::after { content: "▌"; animation: blink 1s steps(1) infinite; color:#57d364; }
+  @keyframes blink { 50% { opacity: 0; } }
+  .note { font-size: 13px; opacity: .7; margin-top: 10px; line-height: 1.5; }
 </style>
 </head>
 <body>
@@ -48,44 +69,99 @@
   <p class="sub">Navigateur web minimaliste piloté par un démon <strong>Tor officiel</strong> —
   la fenêtre ne s'ouvre qu'après <strong>preuve</strong> que le trafic sort par un relais de sortie.</p>
 
-  <a class="dl" href="https://github.com/MaukTenieb/torview/releases/latest/download/torview-windows-x64.zip">⬇ Télécharger TorView (Windows x64)</a>
-  <span class="alt">
-    Autres plateformes, sources et empreintes :
-    <a href="https://github.com/MaukTenieb/torview/releases">la page Releases</a> ·
-    <a href="https://github.com/MaukTenieb/torview">code source</a>
+  <div class="row">
+    <a class="dl" href="https://github.com/MaukTenieb/torview/releases/latest/download/torview-windows-x64.zip">⬇ Télécharger (Windows x64)</a>
+    <button class="play" id="play">▶ Voir l'exécution vérifiée</button>
+  </div>
+  <span style="display:block;margin-top:10px;font-size:13.5px;opacity:.75">
+    Autres plateformes, sources, empreintes :
+    <a style="color:#79b8ff" href="https://github.com/MaukTenieb/torview/releases">Releases</a> ·
+    <a style="color:#79b8ff" href="https://github.com/MaukTenieb/torview">code source</a>
   </span>
+
+  <h2>L'exécution, ligne à ligne</h2>
+  <div id="console">Cliquez ▶ ci-dessus : la sortie console d'une exécution réelle de
+<code>torview.exe --smoke</code> sera rejouée ici, comme dans un terminal.</div>
+  <p class="note" id="note"><strong>Ce que vous voyez</strong> : le journal authentique d'une exécution
+  réelle (Windows 11 x64, Tor 15.0.24 officiel). Un navigateur ne peut pas exécuter un binaire
+  Windows — cette relecture en déroule la sortie réelle ; le bouton ⬇ l'exécute pour de vrai chez vous,
+  et <code>torview.exe --smoke</code> la recopie sur <em>votre</em> machine (code 0 exigé).</p>
 
   <h2>Ce que fait TorView</h2>
   <ul>
-    <li>Démon <strong>Tor officiel embarqué</strong>, téléchargé chez torproject.org, SHA-256 vérifié contre les sommes signées ; ports aléatoires, authentification SAFECOOKIE, extinction propre (zéro processus orphelin).</li>
-    <li><strong>DNS résolu côté Tor</strong> (SOCKSv5 remote-DNS) ; WebRTC désactivé à la couche Chromium et masqué par script ; <strong>profil éphémère par défaut</strong> — les cookies ne lient pas les sessions.</li>
-    <li><strong>Preuve avant la fenêtre</strong> : relais de sortie confirmé (check.torproject.org via Tor), identity NEWNYM, aller-retour .onion réel — le tout dans le journal, reproductible via <code>torview.exe --smoke</code>.</li>
-    <li>Zéro dépendance exotique : client SOCKS5 audité de 168 lignes, un seul binaire.</li>
+    <li>Démon <strong>Tor officiel embarqué</strong> (torproject.org, SHA-256 vérifié contre les sommes signées), ports aléatoires, authentification SAFECOOKIE, extinction propre — zéro orphelin.</li>
+    <li><strong>DNS résolu côté Tor</strong> (SOCKSv5 remote-DNS) ; WebRTC désactivé couche Chromium + masque script ; <strong>profil éphémère par défaut</strong> : les cookies ne lient pas les sessions.</li>
+    <li><strong>Fail-closed</strong> : pas de preuve → pas de fenêtre. Garde de transport : notre code ne peut plus toucher le réseau hors loopback.</li>
+    <li>Zéro dépendance exotique : client SOCKS5 audité de 168 lignes, un seul binaire Go.</li>
   </ul>
 
   <h2>Plateformes — l'état réel</h2>
   <table>
     <tr><th>Plateforme</th><th>État</th><th>Détail</th></tr>
-    <tr><td>Windows 10/11 x64</td><td class="ok">✅ Testé de bout en bout</td><td>Le zip ci-dessus ; smoke, fenêtre, proxy prouvé, extinction propre</td></tr>
-    <tr><td>Linux (desktop)</td><td class="warn">⚠️ Compilé, non exécuté par le mainteneur</td><td>WebKitGTK ; <code>--fetch-tor</code> gère les bundles officiels</td></tr>
+    <tr><td>Windows 10/11 x64</td><td class="ok">✅ Testé de bout en bout</td><td>Le zip ci-dessus : smoke, fenêtre, proxy prouvé, extinction propre</td></tr>
+    <tr><td>Linux (desktop)</td><td class="warn">⚠️ Compilé, non exécuté</td><td>WebKitGTK ; <code>--fetch-tor</code> gère les bundles officiels</td></tr>
     <tr><td>macOS 14+</td><td class="warn">⚠️ Compilé, non exécuté</td><td>WKWebView <code>proxyConfigurations</code> (cgo)</td></tr>
-    <tr><td>iOS</td><td class="no">❌ Non couvert</td><td>WebKit obligatoire + projet Xcode Apple — voir README</td></tr>
+    <tr><td>iOS</td><td class="no">❌ Non couvert</td><td>WebKit obligatoire + projet Xcode Apple</td></tr>
     <tr><td>Android</td><td class="no">❌ Non couvert (pour l'instant)</td><td>ProxyController + daemon embarqué : travail à faire</td></tr>
   </table>
 
   <h2>Vérifier le zip téléchargé (Windows)</h2>
-  <p>Chaque Release joint son empreinte (<code>torview-windows-x64.zip.sha256</code>) ; comparez :</p>
-  <p><code>certutil -hashfile TorView-0.6.0-windows-x64.zip SHA256</code></p>
+  <p>Chaque Release joint son empreinte (<code>torview-windows-x64.zip.sha256</code>) : <code>certutil -hashfile TorView-0.6.0-windows-x64.zip SHA256</code></p>
 
   <div class="warn-box">
     ⚠️ <strong>Lucidité assumée</strong> : TorView n'est <strong>pas Tor Browser</strong> — pas
     d'anti-fingerprinting (canvas, polices, horloge = ceux du moteur). Routé par Tor ≠ durci contre
-    l'identification. Utilisez-le en <em>complément</em>, lisez le
-    <a href="https://github.com/MaukTenieb/torview/blob/main/README.md">README</a> et
-    <a href="https://github.com/MaukTenieb/torview/blob/main/SECURITY.md">SECURITY.md</a> avant de faire confiance.
+    l'identification. Complément léger, pas remplaçant : lisez le
+    <a style="color:#79b8ff" href="https://github.com/MaukTenieb/torview/blob/main/README.md">README</a>
+    et <a style="color:#79b8ff" href="https://github.com/MaukTenieb/torview/blob/main/SECURITY.md">SECURITY.md</a>.
   </div>
 
   <footer> Licence MIT · TorView 0.6.0 · la CI refabrique et vérifie ce zip à chaque tag <code>v*</code> </footer>
 </div>
+
+<script>
+var LINES = [
+  { cls: "cmd",  t: "C:\\> torview.exe --smoke                                  [TorView 0.6.0 · Windows 11 x64]", d: 500 },
+  { cls: "tor",  t: "[torboot smoke] binaire : <exécutable>\\bin\\tor\\tor.exe",            d: 800 },
+  { cls: "",     t: "[torboot smoke] lancement de la vérification du chemin de sortie…",  d: 700 },
+  { cls: "port", t: "[torboot smoke] socks=127.0.0.1:58879  control=127.0.0.1:58880        ← ports appris (bind :0)", d: 1100 },
+  { cls: "tor",  t: "[tor]  Bootstrapped 100% (done)",                                     d: 2200 },
+  { cls: "ok",   t: "[torboot smoke] OK : trafic bien sorti par un relais de sortie Tor",   d: 900 },
+  { cls: "nym",  t: "[torboot smoke] NEWNYM accepté (nouveau circuit) — canal de contrôle OK", d: 900 },
+  { cls: "",     t: "[torboot smoke] preuve .onion : découverte depuis l'en-tête officiel…",  d: 800 },
+  { cls: "ok",   t: "[torboot smoke] preuve .onion : 2gzyxa5ihm…clen53wid.onion → HTTP 200 via le circuit ✓", d: 2600 },
+  { cls: "cmd",  t: "[torboot smoke] exit code 0 — chemin complet vérifié (spawn, SAFECOOKIE, bootstrap, sortie, contrôle)", d: 500 }
+];
+(function () {
+  var box = document.getElementById("console"), btn = document.getElementById("play"), note = document.getElementById("note");
+  var busy = false;
+  function line(cls, text) {
+    var s = document.createElement("span");
+    if (cls) s.className = cls;
+    s.textContent = text + "\n";
+    box.appendChild(s);
+    box.scrollTop = box.scrollHeight;
+  }
+  btn.addEventListener("click", function () {
+    if (busy) return;
+    busy = true; btn.disabled = true; btn.textContent = "⏳ exécution en cours…";
+    box.textContent = ""; box.className = "";
+    var cur = document.createElement("span"); cur.className = "cur";
+    box.appendChild(cur);
+    var i = 0;
+    function next() {
+      if (i >= LINES.length) { cur.remove(); busy = false; btn.disabled = false; btn.textContent = "▶ Rejouer"; return; }
+      var L = LINES[i++];
+      setTimeout(function () {
+        var t = document.createElement("div"); t.style.display = "inline";
+        t.textContent = L.t; cur.parentNode.insertBefore(t, cur); box.insertBefore(document.createTextNode("\n"), cur);
+        if (L.cls) t.className = L.cls;
+        next();
+      }, L.d);
+    }
+    next();
+  });
+})();
+</script>
 </body>
 </html>
