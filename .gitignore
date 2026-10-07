@@ -1,0 +1,21 @@
+# Build artifacts
+torview
+torview.exe
+torview-smoke
+torview-smoke.exe
+*.test
+
+# Runtime data (recreated at each launch)
+tor_data/
+wv2_profile/
+
+# Downloaded/embedded Tor daemon (via --fetch-tor; never redistributed by git)
+bin/
+
+# Release packaging output
+dist/
+
+# OS noise
+.DS_Store
+Thumbs.db
+desktop.ini
