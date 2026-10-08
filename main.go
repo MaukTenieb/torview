@@ -14,6 +14,7 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 )
 
@@ -64,26 +65,25 @@ const portalHTML = `<!doctype html>
       padding: 9px 18px; font-size: 14px; cursor: pointer; margin-top: 8px;
     }
     button[disabled] { opacity: 0.5; cursor: default; }
-    #url { margin-top: 28px; width: 60%; display: flex; gap: 8px; }
-    #url input {
-      flex: 1; background: #171c21; border: 1px solid #2a3138;
-      color: #d8dee6; border-radius: 6px; padding: 9px 12px; font-size: 14px;
-    }
     .hint { font-size: 12px; opacity: 0.55; max-width: 640px; text-align: center; }
+    kbd {
+      background: #171c21; border: 1px solid #2a3138; border-bottom-width: 2px;
+      border-radius: 4px; padding: 1px 5px; font-family: inherit; font-size: 11px;
+    }
   </style>
 </head>
 <body>
   <h1>TorView</h1>
   <div id="status">vérification du chemin de sortie…</div>
-  <div id="url" style="display:none">
-    <input id="u" placeholder="https://… ou abcdef…onion"/>
-    <button onclick="go()">Aller</button>
-  </div>
-  <button id="nym" style="display:none" onclick="newid()">Nouvelle identité (NEWNYM)</button>
   <div class="hint">
+    Saisissez une adresse dans la barre ci-dessus (Ctrl+L pour le focus).
     Toutes les connexions de cette application passent par Tor. DNS résolu par
     le circuit (SOCKSv5 remote-DNS). WebRTC désactivé à la couche Chromium et
     masqué par script.
+  </div>
+  <div class="hint">
+    Raccourcis : <kbd>Ctrl</kbd>+<kbd>L</kbd> adresse · <kbd>Alt</kbd>+<kbd>←</kbd>/<kbd>→</kbd> historique ·
+    <kbd>F5</kbd> recharger · <kbd>Échap</kbd> quitter l'adresse.
   </div>
 <script>
   function s(t, ok) {
@@ -96,28 +96,14 @@ const portalHTML = `<!doctype html>
     const r = await window.torviewStatus();
     if (r.exitOK) {
       s('Sortie Tor confirmée — <b>' + r.detail + '</b><br/>' + r.socks, true);
-      document.getElementById('url').style.display = 'flex';
-      document.getElementById('nym').style.display = '';
     } else {
       s('échec de la vérification : ' + r.detail, false);
     }
   }
-  async function newid() {
-    document.getElementById('nym').disabled = true;
-    const r = await window.torviewNewIdentity();
-    setTimeout(() => { document.getElementById('nym').disabled = false; }, 11000);
-    s(r);
-  }
-  async function go() {
-    let v = document.getElementById('u').value.trim();
-    if (!v) return;
-    if (!/^https?:\/\//i.test(v) && !/\.onion$/i.test(v)) v = 'https://' + v;
-    document.querySelector('#url input').value = v;
-    window.location = v;
-  }
   window.refreshTorStatus = refresh;
   window.addEventListener('DOMContentLoaded', refresh);
-  // Guard rails: refuse to about:blank navigate; keep the portal reachable.
+  // La barre injectée (chrome.go) fournit navigation, accueil et NEWNYM :
+  // le portail n'a plus sa propre barre (une seule barre, partout).
 </script>
 </body>
 </html>
@@ -128,6 +114,13 @@ func main() {
 	// case (fetching Tor over HTTPS happens outside Tor, like TB's installer).
 	if len(os.Args) > 1 {
 		switch os.Args[1] {
+		case "--bridges":
+			transport := "obfs4"
+			if len(os.Args) > 2 {
+				transport = strings.ToLower(os.Args[2])
+			}
+			runBridgesCLI(transport)
+			return
 		case "--version":
 			printVersion()
 			return

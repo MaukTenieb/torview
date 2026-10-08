@@ -193,3 +193,43 @@ func TestChromeInitJSShape(t *testing.T) {
 		t.Fatal("CSS de chrome trop court")
 	}
 }
+
+// TestChromeUXv2 pins the UX redo (v2) contract: loading state, security
+// badge, home binding, keyboard shortcuts and the NEWNYM countdown.
+func TestChromeUXv2(t *testing.T) {
+	js := chromeInitJS()
+	for _, want := range []string{
+		"tv-prog",                // loading progress strip
+		"tv-sec",                 // security badge
+		"tv-sec-onion",           // 🧅 onion badge class
+		"tv-sec-http",            // plain-HTTP warning class
+		"tv-toast",               // feedback toast
+		"__torviewHome",          // home button → Go binding
+		"__torviewNym",           // NEWNYM binding call
+		"ArrowLeft",              // Alt+← shortcut
+		"ArrowRight",             // Alt+→ shortcut
+		"'l'",                    // Ctrl+L focus address field
+		"'F5'",                   // reload shortcut
+		"Nouvelle identité",      // NEWNYM button label
+	} {
+		if !strings.Contains(js, want) {
+			t.Fatalf("chrome UX v2 sans %q", want)
+		}
+	}
+	// The placeholder must be replaced by the real CSS, which carries the
+	// new classes too.
+	for _, want := range []string{"tv-prog-on", "tv-spin", "tv-toast-on", "tv-sec-home"} {
+		if !strings.Contains(js, want) {
+			t.Fatalf("CSS chrome UX v2 sans %q", want)
+		}
+	}
+}
+
+// TestChromeCSSQuoteSafe: chromeCSS is spliced into a single-quoted JS
+// string literal — a single quote would terminate it early and silently
+// break the whole injected chrome.
+func TestChromeCSSQuoteSafe(t *testing.T) {
+	if strings.Contains(chromeCSS, "'") {
+		t.Fatal("chromeCSS contient une apostrophe : casserait le littéral JS '__CSS__'")
+	}
+}

@@ -229,6 +229,7 @@ func (t *torManager) spawn(binary, base string) error {
 		"--TruncateLogFile", "1",
 		"--Log", "NOTICE",
 	}
+	args = append(args, bridgeArgs(base)...)
 	cmd := exec.Command(binary, args...)
 	cmd.Dir = base
 	cmd.SysProcAttr = platformProcAttr() // Windows: detached hidden console (see control_windows.go).
