@@ -116,10 +116,15 @@ func main() {
 		switch os.Args[1] {
 		case "--bridges":
 			transport := "obfs4"
-			if len(os.Args) > 2 {
-				transport = strings.ToLower(os.Args[2])
+			viaTor := false
+			for _, a := range os.Args[2:] {
+				if a == "--via-tor" {
+					viaTor = true
+				} else {
+					transport = strings.ToLower(a)
+				}
 			}
-			runBridgesCLI(transport)
+			runBridgesCLI(transport, viaTor)
 			return
 		case "--version":
 			printVersion()
