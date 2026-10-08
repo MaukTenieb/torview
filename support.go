@@ -88,6 +88,45 @@ func checkExit(m *torManager) (bool, string) {
 	return false, "réponse inattendue du site de contrôle"
 }
 
+// checkOnionLocation fetches a clearnet URL through Tor purely to read its
+// Onion-Location HTTP header — the variant the injected JS cannot see (pages
+// are same-origin-blinded to response headers). Informational only: if the
+// fetch fails (site down, slow circuit, not an HTML site, no header) we stay
+// silent. The .onion URL is returned with the SAME path/query as the request,
+// per the official spec's own recommendation.
+func checkOnionLocation(m *torManager, pageURL string) string {
+	u, err := url.Parse(pageURL)
+	if err != nil || (u.Scheme != "https" && u.Scheme != "http") || u.Host == "" {
+		return ""
+	}
+	c := torHTTPClient(m, 25*time.Second)
+	req, err := http.NewRequest("HEAD", pageURL, nil)
+	if err != nil {
+		return ""
+	}
+	req.Header.Set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:128.0) Gecko/20100101 Firefox/128.0")
+	resp, err := c.Do(req)
+	if err != nil {
+		return ""
+	}
+	defer resp.Body.Close()
+	onion := resp.Header.Get("Onion-Location")
+	if onion == "" {
+		return ""
+	}
+	o, err := url.Parse(onion)
+	if err != nil || !strings.HasSuffix(o.Host, ".onion") {
+		return ""
+	}
+	// Spec: keep the site's own path when the header advertises it; when the
+	// header is origin-only, carry the current path over.
+	if o.Path == "" || o.Path == "/" {
+		o.Path = u.Path
+		o.RawQuery = u.RawQuery
+	}
+	return o.String()
+}
+
 // onionProbe demonstrates a real hidden-service round trip through this
 // session's Tor. The target is DISCOVERED at runtime from torproject.org's
 // Onion-Location header (official, self-describing source — nothing

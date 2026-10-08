@@ -150,18 +150,17 @@ const chromeJSTemplate = `(function () {
     bar.appendChild(nym);
 
     // Onion-Location pill: when a clearnet page advertises an .onion
-    // equivalent (HTTP header rendered as <meta http-equiv="onion-location">,
-    // the documented equivalent — Tor Community spec), offer the switch.
+    // equivalent, offer the switch. Two detection paths, per the official
+    // spec (header AND <meta http-equiv> equivalent):
+    //   1. <meta http-equiv="onion-location"> in the DOM — synchronous;
+    //   2. the real HTTP response header — invisible to same-origin JS, so
+    //      the Go side fetches it via a throttled HEAD through Tor
+    //      (__torviewProbeOnion). This is what Tor Browser does natively.
     // Reaching the .onion service bypasses the exit relay entirely: no
     // shared exit IP, no exit-IP-based blocks or captchas on that site.
     var onionBtn = null;
     var onionTarget = '';
-    function checkOnion() {
-      if (!document.head) return;
-      var meta = null;
-      try { meta = document.querySelector('meta[http-equiv="onion-location" i]'); } catch (e) {}
-      var t = meta && meta.content ? String(meta.content).trim() : '';
-      if (!/^https?:\/\//i.test(t) || !/\.onion(:|\/|$)/i.test(t)) t = '';
+    function setOnion(t) {
       var here = '';
       try { here = location.href; } catch (e) {}
       if (t && here && t.split('#')[0] === here.split('#')[0]) t = '';
@@ -176,6 +175,26 @@ const chromeJSTemplate = `(function () {
       } else if (onionBtn) {
         onionBtn.style.display = 'none';
       }
+    }
+    var onionProbedHost = '';
+    function checkOnion() {
+      if (!document.head) return;
+      var meta = null;
+      try { meta = document.querySelector('meta[http-equiv="onion-location" i]'); } catch (e) {}
+      var t = meta && meta.content ? String(meta.content).trim() : '';
+      if (!/^https?:\/\//i.test(t) || !/\.onion(:|\/|$)/i.test(t)) t = '';
+      if (t) { setOnion(t); return; }
+      // Header path: ask Go exactly once per page host.
+      var host = '';
+      try { host = location.host; } catch (e) {}
+      if (!host || !window.__torviewProbeOnion) return;
+      if (host === onionProbedHost) return;
+      onionProbedHost = host;
+      try {
+        window.__torviewProbeOnion(location.href).then(function (h) {
+          if (h && /^https?:\/\//i.test(h) && /\.onion(:|\/|$)/i.test(h)) setOnion(String(h));
+        }).catch(function () {});
+      } catch (e) {}
     }
 
     var toast = document.createElement('div');

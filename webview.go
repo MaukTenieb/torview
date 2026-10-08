@@ -15,6 +15,7 @@ package main
 
 import (
 	"fmt"
+	"net/url"
 	"sync"
 	"time"
 
@@ -49,6 +50,60 @@ func doNewIdentity(m *torManager) (string, error) {
 	return "nouveau circuit Tor activé", nil
 }
 
+// probeCache memoizes Onion-Location lookups ("" = checked, none found)
+// so at most one HEAD request per origin per 10 minutes reaches any site.
+type probeEntry struct {
+	onion string
+	when  time.Time
+}
+var (
+	probeMu    sync.Mutex
+	probeCache = map[string]probeEntry{} // key: scheme://host
+)
+
+func probeKey(pageURL string) string {
+	u, err := url.Parse(pageURL)
+	if err != nil || u.Host == "" {
+		return ""
+	}
+	return u.Scheme + "://" + u.Host
+}
+
+func probeCacheHas(pageURL string) bool {
+	k := probeKey(pageURL)
+	if k == "" {
+		return false
+	}
+	probeMu.Lock()
+	defer probeMu.Unlock()
+	e, ok := probeCache[k]
+	return ok && time.Since(e.when) < 10*time.Minute
+}
+
+func probeCacheGet(pageURL string) string {
+	k := probeKey(pageURL)
+	if k == "" {
+		return ""
+	}
+	probeMu.Lock()
+	defer probeMu.Unlock()
+	e, ok := probeCache[k]
+	if !ok || time.Since(e.when) >= 10*time.Minute {
+		return ""
+	}
+	return e.onion
+}
+
+func probeCachePut(pageURL, onion string) {
+	k := probeKey(pageURL)
+	if k == "" {
+		return
+	}
+	probeMu.Lock()
+	probeCache[k] = probeEntry{onion: onion, when: time.Now()}
+	probeMu.Unlock()
+}
+
 func runWebview(m *torManager, statusDetail string) {
 	debug := false
 	w := webview.New(debug)
@@ -68,6 +123,21 @@ func runWebview(m *torManager, statusDetail string) {
 	_ = w.Bind("__torviewHome", func() string {
 		w.Dispatch(func() { w.SetHtml(portalHTML) })
 		return ""
+	})
+	// __torviewProbeOnion reads the Onion-Location HTTP header of the current
+	// page via a HEAD request through Tor (the JS side cannot see response
+	// headers). The Go side throttles: one probe per origin per 10 minutes,
+	// so navigating a site never hammers its servers.
+	_ = w.Bind("__torviewProbeOnion", func(pageURL string) string {
+		if pageURL == "" {
+			return ""
+		}
+		if onion := probeCacheGet(pageURL); onion != "" || probeCacheHas(pageURL) {
+			return onion
+		}
+		onion := checkOnionLocation(m, pageURL)
+		probeCachePut(pageURL, onion)
+		return onion
 	})
 
 	// Bindings of the built-in portal page.
