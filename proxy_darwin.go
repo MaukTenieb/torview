@@ -29,6 +29,11 @@ package main
 #import <objc/runtime.h>
 #import <objc/message.h>
 
+// Forward declaration: tvSetSocksProxy calls tvApplyProxyConfig defined
+// below. Newer Apple toolchains (Xcode 14+) reject implicit function
+// declarations as errors — the prototype must come first.
+int tvApplyProxyConfig(id cfg);
+
 // Returns 1 if the runtime knows the proxyConfigurations selectors
 // (runtime = macOS 14+ / iOS 17+ SDK or newer runtime), 0 otherwise.
 int tvRuntimeHasProxyAPI(void) {
