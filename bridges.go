@@ -131,6 +131,9 @@ func findPTPlugin(base, exe string) string {
 	for _, cand := range []string{
 		filepath.Join(base, "bin", "pt", name),
 		filepath.Join(base, name),
+		// The official Expert Bundle ships lyrebird (obfs4 + webtunnel) under
+		// bin/tor/pluggable_transports/ — use it directly, no extra download.
+		filepath.Join(base, "bin", "tor", "pluggable_transports", name),
 	} {
 		if st, err := os.Stat(cand); err == nil && !st.IsDir() {
 			return cand
