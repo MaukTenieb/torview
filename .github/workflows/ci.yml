@@ -74,14 +74,25 @@ jobs:
       - name: Smoke on the runner (real exit-relay proof)
         shell: bash
         run: go run . --smoke
-      - name: Assemble zip
+      - name: Assemble zip (exe + Tor bundle + docs, mirror of make-release.sh)
         shell: pwsh
         run: |
+          # --fetch-tor extracted the official bundle to bin/tor at the repo
+          # root; the release zip MUST carry it (a browser without Tor is a
+          # paperweight), plus docs/index.html. Mirrors make-release.sh.
+          if (-not (Test-Path bin/tor/tor.exe)) { throw "bin/tor/tor.exe absent — --fetch-tor n'a pas produit le bundle" }
+          New-Item -ItemType Directory -Force -Path dist/pkg/bin, dist/pkg/docs | Out-Null
+          Remove-Item -Recurse -Force dist/pkg/bin/tor -ErrorAction SilentlyContinue
+          Copy-Item -Recurse bin/tor -Destination dist/pkg/bin/tor
+          Copy-Item docs/index.html -Destination dist/pkg/docs/index.html
           Copy-Item README.md, LICENSE, SECURITY.md -Destination dist/pkg/
           Compress-Archive -Path dist/pkg/* -DestinationPath dist/torview-windows-x64.zip -Force
           $h = (Get-FileHash dist/torview-windows-x64.zip -Algorithm SHA256).Hash.ToLower()
           "$h *torview-windows-x64.zip" | Out-File -Encoding ascii dist/torview-windows-x64.zip.sha256
           Get-Content dist/torview-windows-x64.zip.sha256
+          # Guard: the zip must be the full package (~20 MB), never a stub.
+          $min = 15MB
+          if ((Get-Item dist/torview-windows-x64.zip).Length -lt $min) { throw "zip trop petit — bundle Tor manquant" }
       - name: Attach to release
         uses: softprops/action-gh-release@v2
         with:
