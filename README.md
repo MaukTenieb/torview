@@ -179,6 +179,8 @@ Tor résolu dans l'ordre : `TORVIEW_TOR` → `bin/tor/tor(.exe)` (layout
 - [reporhogo](https://github.com/MaukTenieb/reporhogo) · [site](https://mauktenieb.github.io/reporhogo/): One topic, forty-one code forges (MIT).
 - [Photofauna](https://github.com/MaukTenieb/Photofauna) · [site](https://mauktenieb.github.io/insertkoin/fotofauna.html): The pocket photo emulator.
 - [detour](https://github.com/MaukTenieb/detour): Cuts a sheet of eight portraits into a sprite strip (Python).
+- [faunator](https://github.com/MaukTenieb/faunator) · [site](https://mauktenieb.github.io/faunator/): Tor inside a web page: web and .onion, no extension (MIT).
+- [korhotube](https://github.com/MaukTenieb/korhotube): All the videos of a YouTube channel as JSON: tags, chapters, dubbing, dates (MIT).
 
 Artist: https://github.com/MaukTenieb · Music and sales: https://mauktenieb.bandcamp.com · Journal: https://korhogo.substack.com · Bio: https://orcid.org/0009-0007-9096-8267
 <!-- network:end -->
