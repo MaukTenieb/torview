@@ -173,7 +173,7 @@ Tor résolu dans l'ordre : `TORVIEW_TOR` → `bin/tor/tor(.exe)` (layout
 
 Made by Mauk Tenieb, alongside [Insert Koin](https://mauktenieb.github.io/insertkoin/), the browser arcade of the Korhogo Fauna.
 
-Other tools by Mauk Tenieb: [Detour](https://github.com/MaukTenieb/detour): portraits to sprite strips, Python · [FaunaTor](https://github.com/MaukTenieb/faunator): Tor inside a web page · [KorhoTube](https://github.com/MaukTenieb/korhotube): a YouTube channel as JSON · [Reporhogo](https://github.com/MaukTenieb/reporhogo): one topic, forty-one code forges · [Photofauna](https://github.com/MaukTenieb/Photofauna): the pocket photo emulator.
+Other tools by Mauk Tenieb: [Detour](https://github.com/MaukTenieb/detour): portraits to sprite strips, then their catchlights · [FaunaTor](https://github.com/MaukTenieb/faunator): Tor inside a web page · [KorhoTube](https://github.com/MaukTenieb/korhotube): a YouTube channel as JSON · [Reporhogo](https://github.com/MaukTenieb/reporhogo): one topic, forty-one code forges · [Photofauna](https://github.com/MaukTenieb/Photofauna): the pocket photo emulator.
 
 Start here: https://mauktenieb.github.io/
 <!-- network:end -->
