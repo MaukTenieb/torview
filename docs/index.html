@@ -91,7 +91,7 @@
     <li>Démon <strong>Tor officiel embarqué</strong> (torproject.org, SHA-256 vérifié contre les sommes signées), ports aléatoires, authentification SAFECOOKIE. TorView ferme le processus Tor à la sortie.</li>
     <li><strong>DNS résolu côté Tor</strong> (SOCKSv5 remote-DNS) ; WebRTC désactivé couche Chromium + masque script ; <strong>profil éphémère par défaut</strong> : les cookies ne lient pas les sessions.</li>
     <li>TorView ouvre la fenêtre après la vérification de sortie par check.torproject.org. Garde de transport : notre code ne peut plus toucher le réseau hors loopback.</li>
-    <li>TorView dépend de la seule bibliothèque webview et d'un client SOCKS5 de 168 lignes.</li>
+    <li>TorView dépend de la bibliothèque go-webview (avec purego) et d'un client SOCKS5 de 168 lignes.</li>
   </ul>
 
   <h2>Plateformes testées et compilées</h2>
@@ -109,7 +109,7 @@
 
   <div class="warn-box">
     ⚠️ TorView route le trafic par Tor ; Tor Browser reste l'outil d'anonymat complet.
-    TorView garde les empreintes du moteur (canvas, polices, horloge). Le
+    TorView expose les empreintes du moteur (canvas, polices, horloge). Le
     <a style="color:#79b8ff" href="https://github.com/MaukTenieb/torview/blob/main/README.md">README</a>
     et <a style="color:#79b8ff" href="https://github.com/MaukTenieb/torview/blob/main/SECURITY.md">SECURITY.md</a> détaillent les limites.
   </div>
