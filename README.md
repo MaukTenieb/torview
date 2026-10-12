@@ -1,34 +1,30 @@
-# TorView — minimal Tor webview browser
+# TorView: a web browser in Go routed through the official Tor daemon
 
-Navigateur Tor **minimaliste, indépendant et portable** en Go : moteur web
-**natif** de chaque OS + démon Tor piloté et — depuis `--fetch-tor` —
-**auto-téléchargé et vérifié** (Windows **et** Linux/macOS : les Expert
-Bundles officiels existent pour les trois OS et sont tous gérés). Zéro cgo
-(sauf le chemin macOS, natif ObjC), zéro module SOCKS tiers (client SOCKS5
-auditfile de 168 lignes, une seule dépendance : la lib webview), zéro
-serveur local, **profil éphémère par défaut** (cookies/état purgés à chaque
-lancement — `TORVIEW_PERSIST=1` pour les conserver) : la fenêtre s'ouvre
-uniquement après **preuve** que le trafic sort par Tor — preuve renforcée
-en 0.6.0 d'un aller-retour **.onion réel**
-(service découvert dynamiquement depuis l'en-tête officiel
-`Onion-Location` de torproject.org, rien de codé en dur).
+TorView est un navigateur en Go qui pilote le démon Tor officiel et le moteur web de chaque système.
+L'option `--fetch-tor` télécharge et vérifie l'Expert Bundle officiel de Tor
+pour Windows, Linux et macOS. TorView utilise du Go pur (ObjC sur macOS), un
+client SOCKS5 de 168 lignes et la seule bibliothèque webview. TorView efface
+le profil (cookies, état du moteur) à chaque lancement ; `TORVIEW_PERSIST=1`
+le conserve. TorView ouvre la fenêtre après la vérification de sortie par
+check.torproject.org. Depuis la version 0.6.0, `--smoke` ajoute un aller-retour
+vers un service .onion, trouvé dans l'en-tête `Onion-Location` de torproject.org.
 
 État vérifié (Windows 11, Tor 15.0.24 officiel) : smoke complet, fenêtre avec
-chrome de navigation, `--proxy-server` prouvé dans la cmdline WebView2,
-extinction sans orphelin. Linux/macOS : compilés, non exécutés ici (limites).
+chrome de navigation, `--proxy-server` prouvé dans la cmdline WebView2 ;
+TorView ferme le processus Tor à la sortie. Linux/macOS : compilés, non exécutés ici (limites).
 
-## ⬇ Téléchargement (1 clic)
+## Téléchargement
 
 **Windows x64 (testé)** : [torview-windows-x64.zip — dernière Release](https://github.com/MaukTenieb/torview/releases/latest/download/torview-windows-x64.zip)
 — vérifiable avec le [.sha256](https://github.com/MaukTenieb/torview/releases/latest/download/torview-windows-x64.zip.sha256)
 joint à la même Release (`certutil -hashfile <zip> SHA256`).
 Page d'accueil : https://mauktenieb.github.io/torview/
 
-## Plateformes — ce que vous obtenez réellement
+## Plateformes testées et compilées
 
 | Plateforme | État | Détail |
 |---|---|---|
-| **Windows 10/11 x64** | ✅ **Testé de bout en bout ici** | zip publié dans Releases ; `--smoke`, fenêtre, proxy prouvé, extinction propre |
+| **Windows 10/11 x64** | ✅ **Testé de bout en bout ici** | zip publié dans Releases ; `--smoke`, fenêtre, proxy prouvé, fermeture de Tor à la sortie |
 | **Linux (desktop)** | ⚠️ Compilé (localement et en CI), **non exécuté** | WebKitGTK + garde GIO ; `--fetch-tor` gère le bundle officiel linux-x86_64/i686 |
 | **macOS 14+ (Apple silicon/intel)** | ⚠️ Compilé (localement et en CI), **non exécuté** | WKWebView `proxyConfigurations` ; `--fetch-tor` gère macos-aarch64/x86_64 |
 | **iOS** | ❌ Non couvert | WebKit seul moteur autorisé ; une app mobile = projet Xcode + Apple SDK (voir ci-dessous) |
@@ -51,12 +47,9 @@ fuites WebRTC/DNS documentées dans leurs dépôts).
 | **OnionBrowser/Orbot** (iOS/Android) | Intégration Tor/mobile éprouvée | Historique de fuites documenté (WebRTC #117/#509, DNS #112) ; plateformes mobiles |
 | **opd-ai/go-tor** (client Tor en Go pur) | Pédagogique, portable | Avertissement explicite de l'auteur : *non officiel, « should NOT be considered safe »* — réimplémenter Tor est un piège |
 | **Démos webview+SOCKS (Go/PyQt, divers)** | Légèreté, lisibilité | Routent par `HTTP_PROXY`/SOCKS sans preuve ; fuites DNS/WebRTC ; ports 9050 figés ; Tor externe requis |
-| **Tails / Whonix** | Étanchéité système | VM/USB dédiés — l'anti-thèse du « minimaliste portable » |
+| **Tails / Whonix** | Étanchéité système | demandent une VM ou une clé USB dédiée |
 
-**Le créneau retenu** : un *vrai* daemon Tor officiel (pas une réimplémentation)
-+ un moteur natif par OS + **preuve systématique** (exit check) + garde-fous
-(processus, transport, ports). C'est exactement ce que les démos GitHub
-omettent et que Tor Browser fait trop lourdement.
+TorView combine le démon Tor officiel, le moteur natif de chaque système, une vérification de sortie au lancement et des garde-fous sur les processus, le transport et les ports.
 
 ## Architecture
 
@@ -73,7 +66,7 @@ torview (Go, un binaire)
      macOS 14+ WKWebView proxyConfigurations SOCKSv5 (runtime ObjC, sans SDK récent requis)
 ```
 
-Points de robustesse **prouvés en test** (pas juste affirmés) :
+Points vérifiés par les tests :
 
 - **Ports auto** : choisis par nous (`bind :0`), jamais 9050/9051 ; re-attach
   éventuel vérifié par `GETINFO` (les fichiers de ports de Tor sont inégaux :
@@ -87,7 +80,7 @@ Points de robustesse **prouvés en test** (pas juste affirmés) :
 - **Fail-closed** : toute étape ratée ferme Tor ; `defer` n'exécutant rien sur
   `os.Exit`, chaque chemin d'échec ferme explicitement.
 - **Extinction** : WM_CLOSE/Ctrl-C → `QUIT` → « Owning controller connection
-  has closed -- exiting now » observé, zéro `tor.exe` résiduel.
+  has closed -- exiting now » observé ; TorView ferme le processus Tor à la sortie.
 
 ## Usage
 
@@ -128,7 +121,7 @@ Tor résolu dans l'ordre : `TORVIEW_TOR` → `bin/tor/tor(.exe)` (layout
 6. Profil : au lancement suivant, `wv2_profile/` est purgé (cookies et
    état du moteur ne survivent pas à la session) sauf `TORVIEW_PERSIST=1`.
 
-## Limites honnêtes
+## Limites
 
 - **Pas Tor Browser** : pas d'anti-fingerprinting (canvas/WebGL/polices =
   ceux du moteur). Routé par Tor ≠ durci contre l'identification.
@@ -171,9 +164,9 @@ Tor résolu dans l'ordre : `TORVIEW_TOR` → `bin/tor/tor(.exe)` (layout
 <!-- network:start -->
 ## Provenance
 
-Made by Mauk Tenieb, alongside [Insert Koin](https://mauktenieb.github.io/insertkoin/), the browser arcade of the Korhogo Fauna.
+Made by Mauk Tenieb, alongside [Insert Koin](https://mauktenieb.github.io/insertkoin/), Mauk Tenieb's browser games set in Korhogo.
 
-Other tools by Mauk Tenieb: [Detour](https://github.com/MaukTenieb/detour): portraits to sprite strips, then their catchlights · [FaunaTor](https://github.com/MaukTenieb/faunator): Tor inside a web page · [KorhoTube](https://github.com/MaukTenieb/korhotube): a YouTube channel as JSON · [Reporhogo](https://github.com/MaukTenieb/reporhogo): searches forty-one code forges for a topic · [Photofauna](https://github.com/MaukTenieb/Photofauna): the pocket photo emulator.
+Other tools by Mauk Tenieb: [Detour](https://github.com/MaukTenieb/detour): cuts portrait sheets into sprite strips and places the eye lights · [FaunaTor](https://github.com/MaukTenieb/faunator): reads web and .onion pages through Tor clients that run in the page · [KorhoTube](https://github.com/MaukTenieb/korhotube): lists every video of a YouTube channel as JSON · [Reporhogo](https://github.com/MaukTenieb/reporhogo): searches forty-one code forges for a topic and lists the repositories it finds · [Photofauna](https://github.com/MaukTenieb/Photofauna): a photo editor with 44 looks, part of Insert Koin.
 
-Start here: https://mauktenieb.github.io/
+Index of Mauk Tenieb's sites: https://mauktenieb.github.io/
 <!-- network:end -->

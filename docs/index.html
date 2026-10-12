@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>TorView — navigateur Tor minimaliste</title>
-<meta name="description" content="TorView : navigateur web minimaliste routé par un démon Tor officiel. Voyez l'exécution vérifiée rejouée ligne à ligne, puis exécutez-la chez vous.">
+<title>TorView : navigateur web en Go routé par le démon Tor officiel</title>
+<meta name="description" content="TorView est un navigateur web en Go routé par le démon Tor officiel. La page rejoue le journal d'une exécution de torview.exe --smoke sous Windows 11.">
 <style>
   :root { color-scheme: dark; }
   * { box-sizing: border-box; }
@@ -66,12 +66,12 @@
 <body>
 <div class="wrap">
   <h1>TorView</h1>
-  <p class="sub">Navigateur web minimaliste piloté par un démon <strong>Tor officiel</strong> —
-  la fenêtre ne s'ouvre qu'après <strong>preuve</strong> que le trafic sort par un relais de sortie.</p>
+  <p class="sub">TorView est un navigateur web en Go routé par le démon <strong>Tor officiel</strong>.
+  TorView ouvre la fenêtre après la vérification de sortie par check.torproject.org.</p>
 
   <div class="row">
-    <a class="dl" href="https://github.com/MaukTenieb/torview/releases/latest/download/torview-windows-x64.zip">⬇ Télécharger (Windows x64)</a>
-    <button class="play" id="play">▶ Voir l'exécution vérifiée</button>
+    <a class="dl" href="https://github.com/MaukTenieb/torview/releases/latest/download/torview-windows-x64.zip">Archive Windows x64</a>
+    <button class="play" id="play">Journal d'exécution</button>
   </div>
   <span style="display:block;margin-top:10px;font-size:13.5px;opacity:.75">
     Autres plateformes, sources, empreintes :
@@ -80,25 +80,24 @@
   </span>
 
   <h2>L'exécution, ligne à ligne</h2>
-  <div id="console">Cliquez ▶ ci-dessus : la sortie console d'une exécution réelle de
-<code>torview.exe --smoke</code> sera rejouée ici, comme dans un terminal.</div>
-  <p class="note" id="note"><strong>Ce que vous voyez</strong> : le journal authentique d'une exécution
-  réelle (Windows 11 x64, Tor 15.0.24 officiel). Un navigateur ne peut pas exécuter un binaire
-  Windows — cette relecture en déroule la sortie réelle ; le bouton ⬇ l'exécute pour de vrai chez vous,
-  et <code>torview.exe --smoke</code> la recopie sur <em>votre</em> machine (code 0 exigé).</p>
+  <div id="console">Le bouton « Journal d'exécution » rejoue ici, ligne à ligne, la sortie console de
+<code>torview.exe --smoke</code>.</div>
+  <p class="note" id="note">La console affiche le journal d'une exécution sous Windows 11 x64, Tor 15.0.24.
+  La page rejoue ce journal ; l'archive Windows x64 contient <code>torview.exe</code>, et
+  <code>torview.exe --smoke</code> refait le test sur la machine de l'utilisateur et sort avec le code 0 en cas de réussite.</p>
 
   <h2>Ce que fait TorView</h2>
   <ul>
-    <li>Démon <strong>Tor officiel embarqué</strong> (torproject.org, SHA-256 vérifié contre les sommes signées), ports aléatoires, authentification SAFECOOKIE, extinction propre — zéro orphelin.</li>
+    <li>Démon <strong>Tor officiel embarqué</strong> (torproject.org, SHA-256 vérifié contre les sommes signées), ports aléatoires, authentification SAFECOOKIE. TorView ferme le processus Tor à la sortie.</li>
     <li><strong>DNS résolu côté Tor</strong> (SOCKSv5 remote-DNS) ; WebRTC désactivé couche Chromium + masque script ; <strong>profil éphémère par défaut</strong> : les cookies ne lient pas les sessions.</li>
-    <li><strong>Fail-closed</strong> : pas de preuve → pas de fenêtre. Garde de transport : notre code ne peut plus toucher le réseau hors loopback.</li>
-    <li>Zéro dépendance exotique : client SOCKS5 audité de 168 lignes, un seul binaire Go.</li>
+    <li>TorView ouvre la fenêtre après la vérification de sortie par check.torproject.org. Garde de transport : notre code ne peut plus toucher le réseau hors loopback.</li>
+    <li>TorView dépend de la seule bibliothèque webview et d'un client SOCKS5 de 168 lignes.</li>
   </ul>
 
-  <h2>Plateformes — l'état réel</h2>
+  <h2>Plateformes testées et compilées</h2>
   <table>
     <tr><th>Plateforme</th><th>État</th><th>Détail</th></tr>
-    <tr><td>Windows 10/11 x64</td><td class="ok">✅ Testé de bout en bout</td><td>Le zip ci-dessus : smoke, fenêtre, proxy prouvé, extinction propre</td></tr>
+    <tr><td>Windows 10/11 x64</td><td class="ok">✅ Testé de bout en bout</td><td>Le zip ci-dessus : smoke, fenêtre, proxy prouvé, fermeture de Tor à la sortie</td></tr>
     <tr><td>Linux (desktop)</td><td class="warn">⚠️ Compilé, non exécuté</td><td>WebKitGTK ; <code>--fetch-tor</code> gère les bundles officiels</td></tr>
     <tr><td>macOS 14+</td><td class="warn">⚠️ Compilé, non exécuté</td><td>WKWebView <code>proxyConfigurations</code> (cgo)</td></tr>
     <tr><td>iOS</td><td class="no">❌ Non couvert</td><td>WebKit obligatoire + projet Xcode Apple</td></tr>
@@ -109,11 +108,10 @@
   <p>Chaque Release joint son empreinte (<code>torview-windows-x64.zip.sha256</code>) : <code>certutil -hashfile TorView-0.6.0-windows-x64.zip SHA256</code></p>
 
   <div class="warn-box">
-    ⚠️ <strong>Lucidité assumée</strong> : TorView n'est <strong>pas Tor Browser</strong> — pas
-    d'anti-fingerprinting (canvas, polices, horloge = ceux du moteur). Routé par Tor ≠ durci contre
-    l'identification. Complément léger, pas remplaçant : lisez le
+    ⚠️ TorView route le trafic par Tor ; Tor Browser reste l'outil d'anonymat complet.
+    TorView garde les empreintes du moteur (canvas, polices, horloge). Le
     <a style="color:#79b8ff" href="https://github.com/MaukTenieb/torview/blob/main/README.md">README</a>
-    et <a style="color:#79b8ff" href="https://github.com/MaukTenieb/torview/blob/main/SECURITY.md">SECURITY.md</a>.
+    et <a style="color:#79b8ff" href="https://github.com/MaukTenieb/torview/blob/main/SECURITY.md">SECURITY.md</a> détaillent les limites.
   </div>
 
   <footer> Licence MIT · TorView 0.6.0 · la CI refabrique et vérifie ce zip à chaque tag <code>v*</code> </footer>
