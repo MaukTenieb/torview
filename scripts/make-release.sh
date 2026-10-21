@@ -12,8 +12,8 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 
 GO=${GO:-go}
-[ -x /c/Users/blion/AppData/Local/go-toolchain/go/bin/go.exe ] && \
-  GO=/c/Users/blion/AppData/Local/go-toolchain/go/bin/go.exe
+[ -x "$LOCALAPPDATA/go-toolchain/go/bin/go.exe" ] 2>/dev/null && \
+  GO="$LOCALAPPDATA/go-toolchain/go/bin/go.exe"
 
 echo "[*] Build torview.exe (windowsgui)"
 "$GO" vet .
