@@ -1,6 +1,12 @@
-MIT License
+TorView: https://github.com/MaukTenieb/torview
 
-Copyright (c) 2026 TorView contributors
+Three parts, three regimes. Credit for any reuse: Mauk Tenieb & Korhogo.
+
+1. THE CODE: MIT License
+
+Copyright (c) 2026 Mauk Tenieb & Korhogo
+
+This part covers the source code of this repository.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -19,3 +25,40 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+
+2. THE METHOD: Creative Commons Attribution 4.0 International (CC BY 4.0)
+
+https://creativecommons.org/licenses/by/4.0/
+The READMEs, notes, guides and the descriptions of the workflows of this repository:
+free to read, quote, adapt and reuse, with the credit "Mauk Tenieb & Korhogo" and a link
+to https://github.com/MaukTenieb/torview
+
+A person may use an AI assistant to read, explain and adapt the code and the method,
+with the same credit. Text and data mining for the training of AI models: reserved by
+the rights holder (EU Directive 2019/790, art. 4(3)); robots.txt and
+https://mauktenieb.github.io/.well-known/tdmrep.json state it for machines.
+
+3. THE KORHOGO MATERIAL: all rights reserved
+
+Copyright © Mauk Tenieb & Korhogo. Korhogo™, Korhogo Fauna™, Fauna Masks™, Fauna Chess™, Faunarratik™, Katabatik™, Insert Koin™, Korong!™, the names of the Masks and of the games and machines, and the related material: the characters, their stats, mottos, powers and profiles, the symbols, the rules of Fauna Chess, the lore and its texts and lines, the images (painting, posters, portraits, sprites, thumbnails), the videos and the music, in any form or medium, the code files included: property of Mauk Tenieb & Korhogo.
+Reproduction and reuse require written permission. Whoever reuses the code or the method
+replaces this material with their own.
+
+---
+
+Trois parties, trois régimes. Mention de toute reprise : Mauk Tenieb & Korhogo.
+
+1. LE CODE : licence MIT (texte anglais ci-dessus, seul à faire foi). Reprise, modification et
+redistribution libres, notice conservée.
+
+2. LA MÉTHODE : CC BY 4.0. README, notes, guides et descriptions des workflows : lecture,
+citation, adaptation et reprise libres, avec la mention « Mauk Tenieb & Korhogo » et un lien
+vers la source. Une personne peut se servir d'un assistant d'IA pour lire, expliquer et adapter
+le code et la méthode, avec la même mention. Fouille de textes et de données pour
+l'entraînement de modèles d'IA : réservée par l'ayant droit (directive (UE) 2019/790, art. 4.3).
+
+3. LE MATÉRIEL KORHOGO : tous droits réservés. Korhogo™, Korhogo Fauna™, Fauna Masks™, Fauna Chess™, Faunarratik™, Katabatik™, Insert Koin™, Korong!™, les noms des Masks, des jeux et des machines, et le matériel associé : personnages, caractéristiques, devises, pouvoirs et profils, symboles, règles de Fauna Chess, lore, textes et répliques, images (peinture, affiches, portraits, sprites, vignettes), vidéos et musique, sous toute forme et sur tout support, fichiers de code compris : propriété de Mauk Tenieb
+& Korhogo. Reproduction et reprise sur autorisation écrite. Qui reprend le code ou la méthode
+y met son propre matériel.
+
+Contact: mauktenieb@gmail.com
