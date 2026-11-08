@@ -8,9 +8,10 @@
 // the tor/ folder into ./bin/.
 //
 // Supported triples (verified against the 15.0.x index layout):
-//   windows-x86_64, windows-i686, linux-x86_64, linux-i686,
-//   macos-x86_64, macos-aarch64. (android-* bundles exist but need the
-//   dedicated Android port; there is no linux-aarch64 bundle upstream.)
+//
+//	windows-x86_64, windows-i686, linux-x86_64, linux-i686,
+//	macos-x86_64, macos-aarch64. (android-* bundles exist but need the
+//	dedicated Android port; there is no linux-aarch64 bundle upstream.)
 //
 // Honest notes:
 //   - Fetching Tor necessarily happens OUTSIDE Tor (bootstrap problem, same
@@ -45,7 +46,12 @@ const (
 	sumsFile  = "sha256sums-signed-build.txt"
 )
 
-var reVersionDir = regexp.MustCompile(`href="(\d+\.\d+\.\d+)/"`) // stable dirs only (15.0.24); alphas like 16.0a13 don't match
+var reVersionDir = regexp.MustCompile(`href="(?:\./|/torbrowser/)?(\d+\.\d+(?:\.\d+)?)/"`) // stable dirs only (15.0.24, 15.0); alphas like 16.0a13 don't match
+
+// downloadsJSON gives the current stable version when the directory index changes its layout.
+const downloadsJSON = "https://aus1.torproject.org/torbrowser/update_3/release/downloads.json"
+
+var reJSONVersion = regexp.MustCompile(`"version"\s*:\s*"(\d+\.\d+(?:\.\d+)?)"`)
 
 // bundleTriple maps a GOOS/GOARCH pair to the Tor Expert Bundle triple,
 // exactly the set published by torproject (no invented entries).
@@ -82,7 +88,7 @@ func fetchTor() error {
 	if err != nil {
 		return fmt.Errorf("--fetch-tor : %w", err)
 	}
-	reExpertGz := regexp.MustCompile(`href="(tor-expert-bundle-` + triple + `-(\d+\.\d+\.\d+)\.tar\.gz)"`)
+	reExpertGz := regexp.MustCompile(`href="(?:\./)?(tor-expert-bundle-` + triple + `-(\d+\.\d+(?:\.\d+)?)\.tar\.gz)"`)
 
 	// 1) Newest stable version directory from the official index.
 	idx, err := httpGet(distIndex)
@@ -93,6 +99,13 @@ func fetchTor() error {
 	for _, m := range reVersionDir.FindAllStringSubmatch(idx, -1) {
 		if newerVersion(m[1], newest) {
 			newest = m[1]
+		}
+	}
+	if newest == "" {
+		if js, jerr := httpGet(downloadsJSON); jerr == nil {
+			if m := reJSONVersion.FindStringSubmatch(js); m != nil {
+				newest = m[1]
+			}
 		}
 	}
 	if newest == "" {

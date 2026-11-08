@@ -199,18 +199,18 @@ func TestChromeInitJSShape(t *testing.T) {
 func TestChromeUXv2(t *testing.T) {
 	js := chromeInitJS()
 	for _, want := range []string{
-		"tv-prog",                // loading progress strip
-		"tv-sec",                 // security badge
-		"tv-sec-onion",           // 🧅 onion badge class
-		"tv-sec-http",            // plain-HTTP warning class
-		"tv-toast",               // feedback toast
-		"__torviewHome",          // home button → Go binding
-		"__torviewNym",           // NEWNYM binding call
-		"ArrowLeft",              // Alt+← shortcut
-		"ArrowRight",             // Alt+→ shortcut
-		"'l'",                    // Ctrl+L focus address field
-		"'F5'",                   // reload shortcut
-		"Nouvelle identité",      // NEWNYM button label
+		"tv-prog",           // loading progress strip
+		"tv-sec",            // security badge
+		"tv-sec-onion",      // 🧅 onion badge class
+		"tv-sec-http",       // plain-HTTP warning class
+		"tv-toast",          // feedback toast
+		"__torviewHome",     // home button → Go binding
+		"__torviewNym",      // NEWNYM binding call
+		"ArrowLeft",         // Alt+← shortcut
+		"ArrowRight",        // Alt+→ shortcut
+		"'l'",               // Ctrl+L focus address field
+		"'F5'",              // reload shortcut
+		"Nouvelle identité", // NEWNYM button label
 	} {
 		if !strings.Contains(js, want) {
 			t.Fatalf("chrome UX v2 sans %q", want)
@@ -231,5 +231,22 @@ func TestChromeUXv2(t *testing.T) {
 func TestChromeCSSQuoteSafe(t *testing.T) {
 	if strings.Contains(chromeCSS, "'") {
 		t.Fatal("chromeCSS contient une apostrophe : casserait le littéral JS '__CSS__'")
+	}
+}
+
+// The directory index may list versions with two or three parts and relative prefixes.
+func TestVersionDirLayouts(t *testing.T) {
+	idx := `<a href="15.0/">15.0/</a> <a href="./15.0.24/">15.0.24/</a> <a href="/torbrowser/14.5.9/">14.5.9/</a> <a href="16.0a13/">16.0a13/</a>`
+	newest := ""
+	for _, m := range reVersionDir.FindAllStringSubmatch(idx, -1) {
+		if newerVersion(m[1], newest) {
+			newest = m[1]
+		}
+	}
+	if newest != "15.0.24" {
+		t.Errorf("version retenue %q, attendu 15.0.24", newest)
+	}
+	if m := reJSONVersion.FindStringSubmatch(`{"downloads":{},"version":"15.0.3"}`); m == nil || m[1] != "15.0.3" {
+		t.Errorf("version JSON non lue : %v", m)
 	}
 }
